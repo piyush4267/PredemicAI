@@ -1,4 +1,4 @@
-# EpidemicAI — Epidemic Spread Prediction System
+# PredemicAI — Epidemic Spread Prediction System
 
 > AI-powered epidemiological forecasting, hotspot detection, and outbreak risk mapping using COVID-19 global data.
 
@@ -6,7 +6,7 @@
 
 ## Overview
 
-EpidemicAI is a machine learning pipeline that predicts the spread of infectious diseases using historical outbreak data, demographic factors, and government policy indicators. Built for the **Epidemic Spread Prediction** hackathon track.
+PredemicAI is a machine learning pipeline that predicts the spread of infectious diseases using historical outbreak data, demographic factors, and government policy indicators. Built for the **Epidemic Spread Prediction** hackathon track.
 
 ### What It Does
 
@@ -82,13 +82,13 @@ epidemic-ai/
 ```bash
 # Clone the repository
 git clone https://github.com/piyush4267/PredemicAI.git 
-cd epidemic-ai
+cd EpidemicAI
 
 # Install dependencies
 pip install -r requirements.txt
 
 # Run the full notebook
-jupyter notebook notebooks/epidemic_prediction.ipynb
+jupyter notebook notebooks/PredemicAI.ipynb
 
 # Or open the dashboard directly
 open dashboard/index.html
