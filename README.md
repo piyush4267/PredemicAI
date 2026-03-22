@@ -81,7 +81,7 @@ epidemic-ai/
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/epidemic-ai.git
+git clone https://github.com/piyush4267/PredemicAI.git 
 cd epidemic-ai
 
 # Install dependencies
