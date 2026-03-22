@@ -1,4 +1,4 @@
-# PredemicAI — Epidemic Spread Prediction System
+# PredemicAI — Predicting the Epidemic Before it Begins
 
 > AI-powered epidemiological forecasting, hotspot detection, and outbreak risk mapping using COVID-19 global data.
 
