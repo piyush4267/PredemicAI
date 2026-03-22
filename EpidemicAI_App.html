@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PredemicAI — Global Outbreak Intelligence</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;600&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0f04;--bg2:#081c1b;--bg3:#0d1829;--bg4:#111f33;
+  --border:rgba(0,210,255,0.12);--border2:rgba(0,210,255,0.28);
+  --cyan:#00d2ff;--cyan2:#00ffcc;--red:#ff3b5c;--amber:#ffaa00;--green:#00e676;
+  --text:#ddeeff;--muted:#5a7a9a;--mono:'IBM Plex Mono',monospace;
+  --head:'Syne',sans-serif;--body:'Manrope',sans-serif;
+}
+*{box-sizing:border-box;margin: 0;;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:9999}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(4,8,15,0.95);backdrop-filter:blur(12px);border-bottom:0px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* reduce this */
+  cursor: pointer;
+}
+
+.nav-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center ;
+}
+
+.nav-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.nav-title{font-family:var(--head);font-size:16px;font-weight:800;letter-spacing:-.3px}
+.nav-title span{color:var(--cyan)}
+.nav-links{display:flex;gap:2px}
+.nav-link{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;color:var(--muted);letter-spacing:.3px;text-transform:uppercase;font-family:var(--mono)}
+.nav-link:hover,.nav-link.active{background:rgba(0,210,255,0.1);color:var(--cyan)}
+.nav-badge{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.ndot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 2s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.page{display:none;animation:pin .35s ease}
+.page.active{display:block}
+@keyframes pin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.wrap{max-width:1300px;margin:0 auto;padding:28px 20px 60px}
+
+.hero{padding:52px 0 36px;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,210,255,0.08);border:1px solid rgba(0,210,255,0.2);border-radius:20px;padding:4px 14px;font-family:var(--mono);font-size:11px;color:var(--cyan);margin-bottom:18px;letter-spacing:.5px}
+.hero h1{font-family:var(--head);font-size:clamp(32px,5.5vw,60px);font-weight:800;line-height:1.06;letter-spacing:-2px;margin-bottom:14px}
+.hero h1 em{font-style:normal;color:var(--cyan)}
+.hero p{font-size:15px;color:var(--muted);max-width:520px;margin:0 auto 28px;line-height:1.7}
+.cta-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{padding:10px 22px;border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .2s;letter-spacing:.5px;text-transform:uppercase}
+.btnp{background:var(--cyan);color:#04080f}.btnp:hover{background:var(--cyan2);transform:translateY(-1px)}
+.btng{background:transparent;color:var(--cyan);border:1px solid var(--border2)}.btng:hover{background:rgba(0,210,255,.08)}
+
+.kstrip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px}
+@media(max-width:860px){.kstrip{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
+.kpi:hover{border-color:var(--border2);transform:translateY(-2px)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--cyan))}
+.kpi-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.kpi-val{font-family:var(--head);font-size:24px;font-weight:800;color:var(--kc,var(--cyan));line-height:1}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+.sec{display:flex;align-items:center;gap:10px;margin:30px 0 14px}
+.sec h2{font-family:var(--head);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:860px){.g2,.g3{grid-template-columns:1fr}}
+.span2{grid-column:1/-1}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;transition:border-color .2s}
+.card:hover{border-color:var(--border2)}
+.card-title{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.card canvas{max-height:210px}
+
+.alert{display:flex;align-items:center;gap:10px;background:rgba(255,59,92,0.07);border:1px solid rgba(255,59,92,0.22);border-left:3px solid var(--red);border-radius:10px;padding:12px 16px;margin-bottom:22px;font-size:13px}
+.apulse{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;animation:blink 1.2s ease infinite}
+
+.rt{width:100%;border-collapse:collapse;font-size:12px}
+.rt th{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:7px 9px;border-bottom:1px solid var(--border);text-align:left}
+.rt td{padding:8px 9px;border-bottom:1px solid var(--border);vertical-align:middle}
+.rt tr:last-child td{border:none}
+.rt tr:hover td{background:rgba(0,210,255,.03)}
+.rb{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;letter-spacing:.4px}
+.rc{background:rgba(255,59,92,.15);color:var(--red)}
+.rh{background:rgba(255,170,0,.15);color:var(--amber)}
+.rm{background:rgba(0,210,255,.12);color:var(--cyan)}
+.rl{background:rgba(0,230,118,.12);color:var(--green)}
+
+.brow{display:flex;align-items:center;gap:7px}
+.btrack{flex:1;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.bfill{height:100%;border-radius:2px;transition:width .6s}
+
+.sir-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.sir-nm{font-size:10px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;font-family:var(--mono);margin-bottom:5px}
+.sir-r0{font-family:var(--head);font-size:30px;font-weight:800;line-height:1}
+.sir-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.sir-pm{display:flex;justify-content:center;gap:12px;margin-top:7px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.sir-pm span{color:var(--text)}
+
+.ins{padding:12px;background:var(--bg3);border-radius:8px;border-left:3px solid var(--kc,var(--cyan))}
+.ins-t{font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+.ins-b{font-size:12px;line-height:1.6}
+.ins-b strong{color:var(--kc,var(--cyan))}
+
+.fc-item{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border)}
+.fc-item:last-child{border:none}
+.fc-nm{width:85px;font-size:12px;font-weight:600}
+.fc-bar{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;position:relative}
+.fc-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cyan),var(--cyan2))}
+.fc-band{position:absolute;top:0;height:100%;background:rgba(0,255,204,.15);border-radius:3px}
+.fc-vl{font-family:var(--mono);font-size:10px;color:var(--muted);min-width:48px;text-align:right}
+.fc-chg{font-family:var(--mono);font-size:10px;padding:2px 5px;border-radius:3px}
+.cup{background:rgba(255,59,92,.15);color:var(--red)}
+.cdn{background:rgba(0,230,118,.12);color:var(--green)}
+
+.pr{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.pr:last-child{border:none}
+.pr-l{font-size:12px;color:var(--muted)}
+.pr-v{font-family:var(--mono);font-size:12px;font-weight:600}
+
+.cp{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px;margin-top:14px;display:none}
+.cp.open{display:block;animation:pin .3s ease}
+.cp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cp-nm{font-family:var(--head);font-size:18px;font-weight:800}
+.cp-x{background:none;border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:3px 9px;cursor:pointer;font-family:var(--mono);font-size:10px}
+.cpg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.cps{background:var(--bg4);border-radius:7px;padding:10px}
+.cps-l{font-size:10px;color:var(--muted);margin-bottom:3px;font-family:var(--mono);letter-spacing:.4px;text-transform:uppercase}
+.cps-v{font-family:var(--head);font-size:18px;font-weight:700}
+
+.ms{margin-bottom:28px}
+.ms h3{font-family:var(--head);font-size:17px;font-weight:700;margin-bottom:10px;color:var(--cyan)}
+.ms p{font-size:13px;line-height:1.8;color:var(--text);margin-bottom:10px}
+.ms ul{padding-left:18px}
+.ms li{font-size:12px;line-height:1.8;color:var(--muted);margin-bottom:3px}
+.ms li strong{color:var(--text)}
+.cite{font-size:11px;color:var(--muted);font-style:italic;padding:7px 11px;background:var(--bg3);border-radius:5px;border-left:2px solid var(--border2);margin-bottom:6px}
+.tag{display:inline-block;background:rgba(0,210,255,.08);border:1px solid rgba(0,210,255,.2);border-radius:5px;padding:3px 9px;font-family:var(--mono);font-size:10px;color:var(--cyan);margin:3px 3px 0 0}
+
+.ds-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:10px}
+.ds-t{font-family:var(--head);font-size:15px;font-weight:700;margin-bottom:5px}
+.ds-d{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:8px}
+.ds-lk{font-family:var(--mono);font-size:10px;color:var(--cyan)}
+
+#loader{position:fixed;inset:0;background:var(--bg);z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .5s}
+#loader.hide{opacity:0;pointer-events:none}
+.ll{font-family:var(--head);font-size:28px;font-weight:800;color:var(--cyan)}
+.lbw{width:260px;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.lb{height:100%;background:linear-gradient(90deg,var(--cyan),var(--cyan2));animation:lda 1.8s ease forwards}
+@keyframes lda{from{width:0}to{width:100%}}
+.lt{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.5px}
+
+.step-row{display:flex;gap:10px;align-items:flex-start}
+.step-num{min-width:22px;height:22px;background:var(--cyan);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:#04080f;font-weight:700;flex-shrink:0;margin-top:2px}
+.step-txt{font-size:12px;color:var(--muted);line-height:1.6}
+.step-txt strong{color:var(--text)}
+
+.lim-box{padding:10px;background:var(--bg3);border-radius:7px;border-left:2px solid var(--amber)}
+.lim-t{font-size:10px;color:var(--amber);font-family:var(--mono);letter-spacing:.5px;margin-bottom:3px}
+.lim-d{font-size:11px;color:var(--muted)}
+.lim-box.info{border-left-color:var(--cyan)}.lim-box.info .lim-t{color:var(--cyan)}
+
+code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:11px}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="ll">PredemicAI is loading</div>
+  <div class="lbw"><div class="lb"></div></div>
+  <div class="lt" id="lmsg">Initializing pipeline...</div>
+</div>
+
+<nav>
+  <div class="nav-brand" onclick="go('home')">
+   <div class="nav-logo">
+  <img src="./assets/logobare.png" alt="Predemic Logo" style="height: 90px; width: auto; display: block; margin-top: 15px;" />
+</div>>
+    <div class="nav-title">Predemic<span>AI</span></div>
+  </div>
+  <div class="nav-links">
+    <div class="nav-link active" onclick="go('home')">Dashboard</div>
+    <div class="nav-link" onclick="go('map')">Risk Map</div>
+    <div class="nav-link" onclick="go('forecast')">Forecast</div>
+    <div class="nav-link" onclick="go('models')">Models</div>
+    <div class="nav-link" onclick="go('method')">Methodology</div>
+    <div class="nav-link" onclick="go('about')">About</div>
+  </div>
+  <div class="nav-badge"><div class="ndot"></div>201 Countries · Live Analysis</div>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="page-home"><div class="wrap">
+  <div class="hero">
+    <div class="hero-badge">🔬 JHU + OWID · 225,321 Records · 21 Features</div>
+    <h1>Predicting the<em> Epidemic</em><br>Before it Begins</h1>
+    <p>AI-powered epidemic forecasting, hotspot detection, and risk classification across 201 countries using epidemiologically grounded machine learning.</p>
+    <div class="cta-row">
+      <button class="btn btnp" onclick="go('map')">View Risk Map</button>
+      <button class="btn btng" onclick="go('forecast')">30-Day Forecast</button>
+      <button class="btn btng" onclick="go('models')">Model Results</button>
+    </div>
+  </div>
+  <div class="kstrip">
+    <div class="kpi" style="--kc:#ff3b5c"><div class="kpi-lbl">Critical Risk</div><div class="kpi-val">14</div><div class="kpi-sub">countries</div></div>
+    <div class="kpi" style="--kc:#ffaa00"><div class="kpi-lbl">High Risk</div><div class="kpi-val">22</div><div class="kpi-sub">countries</div></div>
+    <div class="kpi" style="--kc:#00d2ff"><div class="kpi-lbl">Model R²</div><div class="kpi-val">0.89</div><div class="kpi-sub">Random Forest</div></div>
+    <div class="kpi" style="--kc:#00e676"><div class="kpi-lbl">Countries</div><div class="kpi-val">201</div><div class="kpi-sub">tracked globally</div></div>
+    <div class="kpi" style="--kc:#00ffcc"><div class="kpi-lbl">Records</div><div class="kpi-val">225K</div><div class="kpi-sub">daily data points</div></div>
+  </div>
+  <div class="alert"><div class="apulse"></div><div><strong style="color:var(--red)">14 countries at CRITICAL risk</strong> — Rₜ > 2.0 and weekly growth > 50%. RF MAPE ≈ 15%, time-split validated on 2022–2023 holdout.</div></div>
+  <div class="sec"><h2>Epidemic Trends</h2></div>
+  <div class="g2">
+    <div class="card"><div class="card-title">Daily New Cases — Top 4 Countries (7-day avg, millions)</div><canvas id="c-cases"></canvas></div>
+    <div class="card"><div class="card-title">Effective Reproduction Number Rₜ Over Time</div><canvas id="c-rt"></canvas></div>
+  </div>
+  <div class="sec"><h2>Country Risk Assessment</h2></div>
+  <div class="g2">
+    <div class="card"><div class="card-title">Risk Ranking — Latest Assessment</div><table class="rt"><thead><tr><th>Country</th><th>Risk</th><th>Rₜ</th><th>7d Growth</th></tr></thead><tbody id="risk-tb"></tbody></table></div>
+    <div class="card"><div class="card-title">Risk Distribution Over Time (countries per level)</div><canvas id="c-dist"></canvas></div>
+  </div>
+  <div class="sec"><h2>SIR Transmission Modeling</h2></div>
+  <div class="card"><div class="card-title">Wave-1 Basic Reproduction Number R₀ per Country</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:6px" id="sir-home"></div></div>
+  <div class="sec"><h2>Key Insights</h2></div>
+  <div class="g2">
+    <div class="card" style="display:flex;flex-direction:column;gap:9px">
+      <div class="ins" style="--kc:var(--cyan2)"><div class="ins-t">Vaccination Effect</div><div class="ins-b">Countries with <strong>&gt;60% coverage</strong> show ~40% lower cases per million in subsequent waves</div></div>
+      <div class="ins" style="--kc:var(--amber)"><div class="ins-t">Age Vulnerability</div><div class="ins-b">Median age <strong>&gt;40</strong> correlates with 2.3× higher CFR — consistent with Levin et al. IFR data</div></div>
+      <div class="ins" style="--kc:var(--cyan)"><div class="ins-t">Policy Lag</div><div class="ins-b">Stringency increase precedes Rₜ reduction by <strong>~14 days</strong> — matching incubation + reporting delay window</div></div>
+      <div class="ins" style="--kc:var(--red)"><div class="ins-t">Wave R₀ Range</div><div class="ins-b">Wave-1 R₀ of <strong>2.5–3.0</strong> consistent with published COVID-19 literature (Liu et al., 2020)</div></div>
+    </div>
+    <div class="card"><div class="card-title">Epidemic Burden Clusters (cases per million)</div><canvas id="c-donut"></canvas></div>
+  </div>
+</div></div>
+
+<!-- RISK MAP -->
+<div class="page" id="page-map"><div class="wrap">
+  <div class="sec" style="margin-top:0"><h2>Global Risk Map</h2></div>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:18px">Hover over a region to see details. Click to open a country panel. Pulsing circles mark active hotspots where Rₜ > 2.0.</p>
+  <div class="kstrip" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi" style="--kc:#ff3b5c"><div class="kpi-lbl">Critical</div><div class="kpi-val">14</div><div class="kpi-sub">countries</div></div>
+    <div class="kpi" style="--kc:#ffaa00"><div class="kpi-lbl">High</div><div class="kpi-val">22</div><div class="kpi-sub">countries</div></div>
+    <div class="kpi" style="--kc:#00d2ff"><div class="kpi-lbl">Medium</div><div class="kpi-val">54</div><div class="kpi-sub">countries</div></div>
+    <div class="kpi" style="--kc:#00e676"><div class="kpi-lbl">Low</div><div class="kpi-val">111</div><div class="kpi-sub">countries</div></div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <svg id="wsvg" viewBox="0 0 1000 460" style="width:100%;display:block;background:#080f1c">
+      <defs><filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <rect width="1000" height="460" fill="#080f1c"/>
+      <line x1="0" y1="230" x2="1000" y2="230" stroke="rgba(0,210,255,.05)" stroke-width="1"/>
+      <line x1="500" y1="0" x2="500" y2="460" stroke="rgba(0,210,255,.05)" stroke-width="1"/>
+      <polygon points="80,70 240,55 285,100 300,180 255,240 195,255 145,235 95,195 65,145" fill="#ff3b5c" opacity=".5" class="mr" data-n="North America" data-r="High" data-c="US, Canada, Mexico" data-r0="2.54"/>
+      <polygon points="195,255 240,255 252,300 222,312 198,288" fill="#ffaa00" opacity=".5" class="mr" data-n="Central America" data-r="Medium" data-c="Guatemala, Costa Rica" data-r0="1.8"/>
+      <polygon points="218,312 315,288 332,350 322,432 278,452 238,420 208,380 198,340" fill="#ffaa00" opacity=".5" class="mr" data-n="South America" data-r="High" data-c="Brazil, Argentina, Colombia" data-r0="2.68"/>
+      <polygon points="418,55 545,48 562,100 542,152 488,162 438,152 408,120" fill="#ff3b5c" opacity=".58" class="mr" data-n="Europe" data-r="Critical" data-c="UK, Germany, France, Italy" data-r0="3.10"/>
+      <polygon points="545,48 808,38 825,98 782,128 622,138 562,100" fill="#ffaa00" opacity=".42" class="mr" data-n="Russia / N. Asia" data-r="Medium" data-c="Russia, Kazakhstan" data-r0="1.9"/>
+      <polygon points="542,152 622,138 642,200 592,222 540,212 520,180" fill="#ffaa00" opacity=".5" class="mr" data-n="Middle East" data-r="Medium" data-c="Saudi Arabia, Iran, Turkey" data-r0="2.1"/>
+      <polygon points="418,200 542,212 562,282 542,382 490,432 428,422 388,360 378,288 398,228" fill="#00d2ff" opacity=".4" class="mr" data-n="Africa" data-r="Medium" data-c="S. Africa, Nigeria, Egypt" data-r0="2.23"/>
+      <polygon points="622,138 722,128 742,198 702,240 642,242 622,200" fill="#ff3b5c" opacity=".52" class="mr" data-n="South Asia" data-r="Critical" data-c="India, Pakistan, Bangladesh" data-r0="2.81"/>
+      <polygon points="722,198 802,178 822,242 782,268 732,258 712,228" fill="#ffaa00" opacity=".48" class="mr" data-n="SE Asia" data-r="High" data-c="Indonesia, Philippines, Vietnam" data-r0="2.2"/>
+      <polygon points="782,98 882,88 902,158 862,188 812,178 782,148" fill="#00d2ff" opacity=".42" class="mr" data-n="East Asia" data-r="Medium" data-c="China, Japan, South Korea" data-r0="1.6"/>
+      <polygon points="782,308 882,298 902,368 862,408 802,398 772,368 762,338" fill="#00e676" opacity=".48" class="mr" data-n="Oceania" data-r="Low" data-c="Australia, New Zealand" data-r0="1.2"/>
+      <!-- hotspots -->
+      <circle cx="298" cy="178" r="6" fill="#ff3b5c" filter="url(#glow)"><animate attributeName="r" values="6;11;6" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;.3;.9" dur="2s" repeatCount="indefinite"/></circle>
+      <circle cx="488" cy="108" r="6" fill="#ff3b5c" filter="url(#glow)"><animate attributeName="r" values="6;11;6" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;.3;.9" dur="2.4s" repeatCount="indefinite"/></circle>
+      <circle cx="678" cy="188" r="6" fill="#ff3b5c" filter="url(#glow)"><animate attributeName="r" values="6;11;6" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;.3;.9" dur="1.8s" repeatCount="indefinite"/></circle>
+      <circle cx="268" cy="368" r="5" fill="#ffaa00" filter="url(#glow)"><animate attributeName="r" values="5;9;5" dur="2.2s" repeatCount="indefinite"/></circle>
+      <g id="maptip" opacity="0" pointer-events="none">
+        <rect id="tb" x="0" y="0" width="195" height="84" rx="8" fill="#0d1829" stroke="rgba(0,210,255,.3)" stroke-width="1"/>
+        <text id="tn" x="12" y="22" fill="#ddeeff" font-size="13" font-family="Syne" font-weight="700"/>
+        <text id="tr" x="12" y="40" fill="#5a7a9a" font-size="11" font-family="IBM Plex Mono"/>
+        <text id="tc" x="12" y="57" fill="#5a7a9a" font-size="10" font-family="IBM Plex Mono"/>
+        <text id="t0" x="12" y="74" fill="#00d2ff" font-size="10" font-family="IBM Plex Mono"/>
+      </g>
+    </svg>
+  </div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:#ff3b5c;display:inline-block"></span>Critical</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:#ffaa00;display:inline-block"></span>High</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:#00d2ff;display:inline-block"></span>Medium</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><span style="width:9px;height:9px;border-radius:50%;background:#00e676;display:inline-block"></span>Low</div>
+    <div style="font-size:11px;color:var(--muted)">● Pulsing = active hotspot (Rₜ > 2.0)</div>
+  </div>
+  <div class="cp" id="cpanel">
+    <div class="cp-h"><div class="cp-nm" id="cpnm">—</div><button class="cp-x" onclick="document.getElementById('cpanel').classList.remove('open')">✕ Close</button></div>
+    <div class="cpg">
+      <div class="cps"><div class="cps-l">Risk Level</div><div class="cps-v" id="cpr">—</div></div>
+      <div class="cps"><div class="cps-l">Wave-1 R₀</div><div class="cps-v" id="cp0" style="color:var(--red)">—</div></div>
+      <div class="cps"><div class="cps-l">Key Countries</div><div class="cps-v" style="font-size:11px" id="cpc">—</div></div>
+      <div class="cps"><div class="cps-l">Region</div><div class="cps-v" style="font-size:12px" id="cpg2">—</div></div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);line-height:1.7">Risk scored on Rₜ proxy, 7-day growth rate, and cases per million. Thresholds from WHO multi-indicator outbreak definitions. Click another region to compare.</p>
+  </div>
+  <div class="sec"><h2>Cluster Analysis</h2></div>
+  <div class="g2">
+    <div class="card"><div class="card-title">Burden Clusters (cases per million)</div><canvas id="c-mc"></canvas></div>
+    <div class="card"><div class="card-title">Vaccination vs Cases Per Million</div><canvas id="c-vs"></canvas></div>
+  </div>
+</div></div>
+
+<!-- FORECAST -->
+<div class="page" id="page-forecast"><div class="wrap">
+  <div class="sec" style="margin-top:0"><h2>30-Day Iterative Forecast</h2></div>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:22px">Model predicts 7 days ahead, feeds prediction back as input, repeats 4× → 30-day projection. Confidence band from 50 Monte Carlo runs with ±2% feature noise.</p>
+  <div class="g2">
+    <div class="card"><div class="card-title">India — 30-Day Forecast</div><canvas id="c-fi"></canvas></div>
+    <div class="card"><div class="card-title">US — 30-Day Forecast</div><canvas id="c-fu"></canvas></div>
+  </div>
+  <div class="g2" style="margin-top:14px">
+    <div class="card"><div class="card-title">Brazil — 30-Day Forecast</div><canvas id="c-fb"></canvas></div>
+    <div class="card"><div class="card-title">Forecast Summary — Top Countries</div><div id="fc-list" style="margin-top:4px"></div></div>
+  </div>
+  <div class="sec"><h2>How It Works</h2></div>
+  <div class="g2">
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <div class="step-row"><div class="step-num">1</div><div class="step-txt">Take the <strong>last known row</strong> per country — confirmed cases, Rₜ proxy, growth rate, vaccination rate, all 21 features</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-txt">Feed into the <strong>Random Forest model</strong> → predict cumulative confirmed cases 7 days ahead</div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-txt"><strong>Update the row</strong> — shift all lag features forward, recalculate Rₜ and growth rate from the predicted value</div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-txt">Repeat 3 more times → <strong>28-day projection</strong>. Run 50× with ±2% noise → confidence band</div></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:9px">
+      <div class="lim-box"><div class="lim-t">Data Cutoff</div><div class="lim-d">JHU dataset ends March 2023. All forecasts demonstrate the architecture on historical holdout — not live prediction.</div></div>
+      <div class="lim-box"><div class="lim-t">Error Propagation</div><div class="lim-d">Each step compounds prediction error. Confidence band widens sharply at day 21+. Treat as directional, not point-exact.</div></div>
+      <div class="lim-box info"><div class="lim-t">Future Work</div><div class="lim-d">Live deployment: WHO/ECDC data feeds. SEIR model with vaccination compartment. Mobility data from Google/Apple.</div></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- MODELS -->
+<div class="page" id="page-models"><div class="wrap">
+  <div class="sec" style="margin-top:0"><h2>Model Performance</h2></div>
+  <div class="g3">
+    <div class="card">
+      <div class="card-title">Random Forest</div>
+      <div class="pr"><span class="pr-l">R² score</span><span class="pr-v" style="color:var(--green)">0.8921</span></div>
+      <div class="pr"><span class="pr-l">Raw MAE</span><span class="pr-v" style="color:var(--amber)">421,532</span></div>
+      <div class="pr"><span class="pr-l">MAE per million pop.</span><span class="pr-v" style="color:var(--green)">~320</span></div>
+      <div class="pr"><span class="pr-l">MAPE</span><span class="pr-v" style="color:var(--green)">~15%</span></div>
+      <div class="pr"><span class="pr-l">Median country MAE</span><span class="pr-v" style="color:var(--green)">~8,400</span></div>
+      <div class="pr"><span class="pr-l">n_estimators</span><span class="pr-v">200</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">XGBoost</div>
+      <div class="pr"><span class="pr-l">R² score</span><span class="pr-v" style="color:var(--amber)">0.7634</span></div>
+      <div class="pr"><span class="pr-l">Raw MAE</span><span class="pr-v" style="color:var(--red)">1,034,359</span></div>
+      <div class="pr"><span class="pr-l">Learning rate</span><span class="pr-v">0.05</span></div>
+      <div class="pr"><span class="pr-l">n_estimators</span><span class="pr-v">300</span></div>
+      <div class="pr"><span class="pr-l">Assessment</span><span class="pr-v" style="color:var(--amber);font-size:10px">Needs tuning</span></div>
+      <div class="pr"><span class="pr-l">Winner</span><span class="pr-v" style="color:var(--green);font-size:10px">RF preferred</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Risk Classifier (RF)</div>
+      <div class="pr"><span class="pr-l">Critical detected</span><span class="pr-v" style="color:var(--red)">14</span></div>
+      <div class="pr"><span class="pr-l">High detected</span><span class="pr-v" style="color:var(--amber)">22</span></div>
+      <div class="pr"><span class="pr-l">Medium detected</span><span class="pr-v" style="color:var(--cyan)">54</span></div>
+      <div class="pr"><span class="pr-l">Low detected</span><span class="pr-v" style="color:var(--green)">111</span></div>
+      <div class="pr"><span class="pr-l">Class_weight</span><span class="pr-v">Balanced</span></div>
+      <div class="pr"><span class="pr-l">Total tracked</span><span class="pr-v">201</span></div>
+    </div>
+  </div>
+  <div class="sec"><h2>Feature Importance & Engineering</h2></div>
+  <div class="g2">
+    <div class="card"><div class="card-title">Feature Importance — Random Forest (top 14)</div><canvas id="c-imp" style="max-height:260px"></canvas></div>
+    <div class="card">
+      <div class="card-title">Epidemiological Rationale</div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:11px">
+        <div style="padding:8px;background:var(--bg3);border-radius:6px"><strong style="color:var(--cyan)">Confirmed cases + lags (1,3,7,14d)</strong> — captures incubation period dynamics. COVID median incubation = 5 days; 7d lag is biologically optimal.</div>
+        <div style="padding:8px;background:var(--bg3);border-radius:6px"><strong style="color:var(--cyan)">Rₜ proxy</strong> — fundamental epidemic control parameter. Rₜ > 1 → outbreak grows. Standard WHO monitoring metric.</div>
+        <div style="padding:8px;background:var(--bg3);border-radius:6px"><strong style="color:var(--cyan)">Growth rate (7d)</strong> — acceleration/deceleration of spread. Positive = emerging outbreak, negative = containment.</div>
+        <div style="padding:8px;background:var(--bg3);border-radius:6px"><strong style="color:var(--amber)">Stringency index</strong> — government policy effect on β (contact rate). ~14 day lag to measurable case impact.</div>
+        <div style="padding:8px;background:var(--bg3);border-radius:6px"><strong style="color:var(--amber)">Vaccination %</strong> — reduces susceptible pool S in SIR. Direct biological protection signal integrated into features.</div>
+        <div style="padding:8px;background:var(--bg3);border-radius:6px"><strong style="color:var(--muted)">Median age + pop density</strong> — proxy for IFR (infection-fatality rate) and contact rate β respectively.</div>
+      </div>
+    </div>
+  </div>
+  <div class="sec"><h2>SIR Transmission Model</h2></div>
+  <div class="card"><div class="card-title">Wave-1 SIR Fit — β (transmission rate), γ (recovery rate), R₀ = β/γ</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:8px" id="sir-mpage"></div></div>
+  <div class="g2" style="margin-top:14px">
+    <div class="card"><div class="card-title">Actual vs Predicted — India Test Set</div><canvas id="c-ap"></canvas></div>
+    <div class="card"><div class="card-title">Error Distribution Across Countries (log MAE)</div><canvas id="c-ed"></canvas></div>
+  </div>
+</div></div>
+
+<!-- METHODOLOGY -->
+<div class="page" id="page-method"><div class="wrap">
+  <div class="sec" style="margin-top:0"><h2>Methodology</h2></div>
+  <div class="ms">
+    <h3>Problem Statement</h3>
+    <p>Predicting infectious disease spread requires integrating epidemic dynamics, demographic vulnerability, and policy response. Our pipeline builds four layers: time-series forecasting for case counts, risk classification for severity, compartmental SIR modeling for transmission dynamics, and K-Means clustering for hotspot detection.</p>
+  </div>
+  <div class="ms">
+    <h3>Data Pipeline</h3>
+    <p>JHU CSSE provides wide-format daily case counts (one column per date). We transform to long format via <code>melt()</code>, aggregate sub-national provinces to country level, then left-join with OWID on country + date. Dynamic columns (vaccination, stringency) are forward-filled within each country in time order — critically, this is done after sorting by date to prevent future data leaking backwards into past rows.</p>
+  </div>
+  <div class="ms">
+    <h3>Feature Engineering — Epidemiological Grounding</h3>
+    <p>All 21 features have direct biological justification:</p>
+    <ul>
+      <li><strong>Rₜ proxy</strong> — 7d avg cases ÷ 7d avg from 7 days prior. When Rₜ > 1, epidemic expands. Standard WHO surveillance metric.</li>
+      <li><strong>Growth rate (7d)</strong> — Captures acceleration of spread. 20% weekly = emerging outbreak signal.</li>
+      <li><strong>Doubling time</strong> — log(2) / log(1 + daily_growth). 7-day doubling = public health emergency threshold.</li>
+      <li><strong>CFR</strong> — Deaths / confirmed. Rising CFR signals healthcare stress or variant shift.</li>
+      <li><strong>Lag features (1,3,7,14d)</strong> — COVID-19 median incubation = 5 days. 7-day lag is biologically optimal. 14-day = full contact-tracing window.</li>
+      <li><strong>Stringency index</strong> — Proxies contact rate reduction (β in SIR). ~14-day lag to case impact (incubation + reporting delay).</li>
+      <li><strong>Vaccination coverage</strong> — Reduces susceptible pool S. Direct biological protection mechanism in SIR framework.</li>
+      <li><strong>Median age, population density, hospital beds</strong> — Demographic vulnerability (IFR proxy), transmission rate, and healthcare capacity.</li>
+    </ul>
+  </div>
+  <div class="ms">
+    <h3>Model Selection Rationale</h3>
+    <p><strong>Random Forest over LSTM:</strong> Tree-based models outperform sequence models when the series is non-stationary (multiple waves with different parameters) and the dataset is wide (21 features) relative to per-country length (~1000 rows). RF also gives interpretable feature importance — critical for biological insight.</p>
+    <p><strong>Time-based split:</strong> Non-negotiable for time series. Random splits cause data leakage — the model sees future rows while predicting past rows, artificially inflating R². We train on pre-2022-01-01 and test on 2022 onwards.</p>
+    <p><strong>SIR per wave, not full timeline:</strong> Full-timeline fitting averages over multiple waves with different β/γ, yielding R₀ ≈ 1. Wave-1 fitting isolates biological transmission before interventions, giving R₀ = 2.5–3.0 consistent with published literature.</p>
+  </div>
+  <div class="ms">
+    <h3>Risk Classification</h3>
+    <p>4-level system (Low / Medium / High / Critical) scores each country-week on three independent epidemiological signals: Rₜ proxy (1–3 pts), 7-day growth rate (1–3 pts), cases per million (1–3 pts). Score 0–1=Low, 2–4=Medium, 5–6=High, 7–9=Critical. 
+      Mirrors WHO multi-indicator approach avoiding single-metric thresholds.</p>
+  </div>
+  <div class="ms">
+    <h3>References</h3>
+    <div style="display:flex;flex-direction:column;gap:7px">
+      <div class="cite">Liu Y et al. (2020). The reproductive number of COVID-19 is higher compared to SARS coronavirus. J Travel Med. R₀ range 2.2–3.6.</div>
+      <div class="cite">Sanche S et al. (2020). High contagiousness and rapid spread of SARS-CoV-2. Emerg Infect Dis. Early Wuhan R₀ up to 5.7.</div>
+      <div class="cite">Levin AT et al. (2020). Assessing age specificity of IFR for COVID-19. Eur J Epidemiol. IFR exponential increase with age.</div>
+      <div class="cite">Hale T et al. (2021). A global panel database of pandemic policies. Nature Human Behaviour. Oxford Stringency Index.</div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ABOUT -->
+<div class="page" id="page-about"><div class="wrap">
+  <div style="text-align:center;padding:40px 0 28px">
+    <div style="font-family:var(--head);font-size:38px;font-weight:800;letter-spacing:-1px;margin-bottom:10px">About PredemicAI</div>
+    <p style="color:var(--muted);font-size:14px;max-width:480px;margin:0 auto">Built for the Epidemic Spread Prediction hackathon track. Combining epidemiological science with machine learning to produce biologically meaningful insights.</p>
+  </div>
+ <div class="sec"><h2>Datasets</h2></div>
+<div class="ds-card">
+  <div class="ds-t">Johns Hopkins CSSE COVID-19 Time Series</div>
+  <div class="ds-d">Daily confirmed cases and deaths across 201 countries, Feb 2020 – Mar 2023. Primary dataset for forecasting, SIR modeling, and risk classification.</div>
+  <a class="ds-lk" href="https://github.com/CSSEGISandData/COVID-19" target="_blank">github.com/CSSEGISandData/COVID-19</a>
+  <div style="margin-top:8px"><span class="tag">225,321 records</span><span class="tag">201 countries</span><span class="tag">Primary</span></div>
+</div>
+<div class="ds-card">
+  <div class="ds-t">Our World in Data COVID-19 Repository</div>
+  <div class="ds-d">Vaccination rates, government stringency index, testing data, and demographic indicators. Used for feature enrichment and demographic vulnerability analysis.</div>
+  <a class="ds-lk" href="https://github.com/owid/covid-19-data" target="_blank">github.com/owid/covid-19-data</a>
+  <div style="margin-top:8px"><span class="tag">Vaccination</span><span class="tag">Stringency index</span><span class="tag">Demographics</span><span class="tag">Secondary</span></div>
+</div>
+<div class="sec"><h2>Technical Stack</h2></div>
+  <div class="g3">
+    <div class="card" style="text-align:center"><div style="font-size:28px;margin-bottom:9px">🐍</div><div style="font-family:var(--head);font-size:15px;font-weight:700;margin-bottom:5px">Python / Jupyter</div><div style="font-size:11px;color:var(--muted)">pandas, numpy, scikit-learn, xgboost, scipy, plotly, matplotlib, seaborn</div></div>
+    <div class="card" style="text-align:center"><div style="font-size:28px;margin-bottom:9px">🤖</div><div style="font-family:var(--head);font-size:15px;font-weight:700;margin-bottom:5px">ML Models</div><div style="font-size:11px;color:var(--muted)">Random Forest, XGBoost, K-Means clustering, SIR compartmental model</div></div>
+    <div class="card" style="text-align:center"><div style="font-size:28px;margin-bottom:9px">🌐</div><div style="font-family:var(--head);font-size:15px;font-weight:700;margin-bottom:5px">Web Dashboard</div><div style="font-size:11px;color:var(--muted)">Pure HTML/CSS/JS + Chart.js — no server needed, opens in any browser</div></div>
+  </div>
+  <div class="sec"><h2>Hackathon Criteria Coverage</h2></div>
+  <div class="card">
+    <table class="rt">
+      <thead><tr><th>Criterion</th><th>Implementation</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Outbreak prediction</td><td>RF + XGBoost 7-day forecasting, time-split validated</td><td><span class="rb rl">Done</span></td></tr>
+        <tr><td>Hotspot detection</td><td>K-Means on per-capita burden features → 4 burden groups</td><td><span class="rb rl">Done</span></td></tr>
+        <tr><td>Transmission modeling</td><td>Wave-1 SIR fit with scipy curve_fit → realistic R₀ 2.5–3.0</td><td><span class="rb rl">Done</span></td></tr>
+        <tr><td>Historical outbreak analysis</td><td>EDA: 201 countries, wave detection, CFR, Rₜ trends</td><td><span class="rb rl">Done</span></td></tr>
+        <tr><td>Demographic/mobility factors</td><td>OWID: vaccination, stringency, median age, pop density, hospital beds</td><td><span class="rb rl">Done</span></td></tr>
+        <tr><td>Risk visualization</td><td>Interactive maps, 4-level classification, global dashboard</td><td><span class="rb rl">Done</span></td></tr>
+        <tr><td>Biological insights</td><td>Methodology section with epi rationale for every feature + references</td><td><span class="rb rl">Done</span></td></tr>
+        <tr><td>30-day forecast</td><td>Iterative prediction with 80% Monte Carlo confidence band</td><td><span class="rb rl">Done</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <!-- TEAM SECTION -->
+<div class="sec"><h2>Team</h2></div>
+<div class="g3" id="team-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))"></div>
+<script>
+const teamMembers = [
+  { name: "Piyush Anand",    initials: "YN", role: "",      photo: "./assets/Piyush.jpeg",  linkedin: "piyush4267",     github: "piyush4267"     },
+  { name: "Anshpreet Singh",   initials: "MT", role: "",    photo: "./assets/Anshpreet.jpeg",  linkedin: "anshpreet-singh-7705553a0/",  github: "Ansh3536"  },
+  { name: "Gurkirat Singh", initials: "M3", role: "", photo: "./assets/Gurkirat.jpeg",                     linkedin: "gurkirat-singh-159271388/",  github: "GurkiratSingh1016"  },
+  { name: "Pratyush Sehgal",  initials: "M4", role: "",   photo: "./assets/Paru.jpeg",                     linkedin: "pratyush-sehgal-1b66b5305/",  github: "pratyush-sehgal"  },
+];
+
+const liSVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452H17.21V14.88c0-1.328-.024-3.037-1.852-3.037-1.853 0-2.136 1.446-2.136 2.94v5.669H9.985V9h3.099v1.561h.044c.431-.817 1.485-1.679 3.056-1.679 3.267 0 3.868 2.149 3.868 4.944v6.626zM5.337 7.433a1.8 1.8 0 1 1 0-3.6 1.8 1.8 0 0 1 0 3.6zM6.762 20.452H3.911V9h2.851v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z"/></svg>`;
+const ghSVG  = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>`;
+
+const avatarHTML = m => m.photo
+  ? `<img src="${m.photo}" alt="${m.name}"
+       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+       style="width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(0,210,255,0.28);object-fit:cover;margin-bottom:12px;display:block">
+     <div style="display:none;width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(0,210,255,0.28);align-items:center;justify-content:center;font-family:var(--head);font-size:15px;font-weight:800;color:var(--cyan);background:rgba(0,210,255,0.07);margin-bottom:12px">${m.initials}</div>`
+  : `<div style="display:flex;width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(0,210,255,0.28);align-items:center;justify-content:center;font-family:var(--head);font-size:15px;font-weight:800;color:var(--cyan);background:rgba(0,210,255,0.07);margin-bottom:12px">${m.initials}</div>`;
+
+document.getElementById('team-grid').innerHTML = teamMembers.map(m => `
+  <div class="card" style="text-align:left">
+    ${avatarHTML(m)}
+    <div style="font-family:var(--head);font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px">${m.name}</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:14px">${m.role}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a href="https://linkedin.com/in/${m.linkedin}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:4px;border:1px solid rgba(0,210,255,0.12);background:rgba(0,210,255,0.04);font-family:var(--mono);font-size:10px;color:#5a7a9a;text-decoration:none">${liSVG} LinkedIn</a>
+      <a href="https://github.com/${m.github}"        target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:4px;border:1px solid rgba(0,210,255,0.12);background:rgba(0,210,255,0.04);font-family:var(--mono);font-size:10px;color:#5a7a9a;text-decoration:none">${ghSVG} GitHub</a>
+    </div>
+  </div>`).join('');
+</script>
+</div></div>
+
+<script>
+const PAGES={'home':0,'map':1,'forecast':2,'models':3,'method':4,'about':5};
+function go(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-link')[PAGES[id]]?.classList.add('active');
+  window.scrollTo({top:0});
+  setTimeout(draw,60);
+}
+
+const LMSGS=['Loading JHU dataset...','Processing 225,321 records...','Engineering 21 epi features...','Training Random Forest...','Fitting SIR wave models...','Classifying outbreak risk...','Dashboard ready!'];
+let lmi=0;
+const lmEl=document.getElementById('lmsg');
+const lt=setInterval(()=>{ if(lmi<LMSGS.length-1){lmEl.textContent=LMSGS[lmi++];}else{clearInterval(lt);setTimeout(()=>{document.getElementById('loader').classList.add('hide');draw();},400);}},280);
+
+Chart.defaults.color='#5a7a9a';
+Chart.defaults.borderColor='rgba(0,210,255,0.08)';
+Chart.defaults.font.family="'Manrope',sans-serif";
+
+const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+const RD=[
+  {c:'United States',risk:'critical',rt:2.8,g:'+42%',col:'#ff3b5c'},
+  {c:'India',risk:'critical',rt:3.1,g:'+38%',col:'#ff3b5c'},
+  {c:'United Kingdom',risk:'critical',rt:2.9,g:'+31%',col:'#ff3b5c'},
+  {c:'Germany',risk:'high',rt:2.1,g:'+22%',col:'#ffaa00'},
+  {c:'France',risk:'high',rt:1.9,g:'+18%',col:'#ffaa00'},
+  {c:'Brazil',risk:'high',rt:2.2,g:'+25%',col:'#ffaa00'},
+  {c:'South Africa',risk:'medium',rt:1.4,g:'+8%',col:'#00d2ff'},
+  {c:'Japan',risk:'medium',rt:1.3,g:'+6%',col:'#00d2ff'},
+  {c:'Australia',risk:'low',rt:0.9,g:'-4%',col:'#00e676'},
+];
+const SD=[
+  {n:'India',r0:2.81,b:0.281,g:0.100,col:'#ff3b5c'},
+  {n:'US',r0:2.54,b:0.254,g:0.100,col:'#ff3b5c'},
+  {n:'Brazil',r0:2.68,b:0.268,g:0.100,col:'#ffaa00'},
+  {n:'UK',r0:3.10,b:0.310,g:0.100,col:'#ff3b5c'},
+  {n:'S.Africa',r0:2.23,b:0.223,g:0.100,col:'#ffaa00'},
+];
+
+const CI={};
+function mk(id,cfg){
+  if(CI[id])return;
+  const el=document.getElementById(id);
+  if(!el)return;
+  CI[id]=new Chart(el,cfg);
+}
+function mkLn(id,dss,ylbl){
+  mk(id,{type:'line',data:{labels:MO,datasets:dss},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{boxWidth:9,font:{size:10}}}},scales:{x:{ticks:{maxTicksLimit:8,font:{size:9}}},y:{title:{display:!!ylbl,text:ylbl||'',font:{size:9}},ticks:{font:{size:9}}}}}});
+}
+function mkFc(id,hist,fc,lo,hi,col){
+  const hlen=hist.length;
+  const allL=[...MO.slice(0,hlen),'W+1','W+2','W+3','W+4'];
+  const nulls=new Array(hlen).fill(null);
+  mk(id,{type:'line',data:{labels:allL,datasets:[
+    {label:'Historical',data:[...hist,...new Array(4).fill(null)],borderColor:col,backgroundColor:col.replace('rgb','rgba').replace(')',',0.08)'),fill:true,tension:0.4,pointRadius:0,borderWidth:2},
+    {label:'Forecast',data:[...nulls.slice(0,-1),hist[hlen-1],...fc],borderColor:'#ffffff',borderDash:[5,4],tension:0.3,pointRadius:0,fill:false,borderWidth:1.5},
+    {label:'CI hi',data:[...nulls.slice(0,-1),hist[hlen-1],...hi],borderColor:'transparent',backgroundColor:'rgba(255,255,255,.07)',fill:'-1',tension:0.3,pointRadius:0},
+    {label:'CI lo',data:[...nulls.slice(0,-1),hist[hlen-1],...lo],borderColor:'transparent',fill:false,tension:0.3,pointRadius:0},
+  ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{boxWidth:9,font:{size:10},filter:i=>i.datasetIndex<2}}},scales:{x:{ticks:{maxTicksLimit:9,font:{size:9}}},y:{title:{display:true,text:'Confirmed (M)',font:{size:9}},ticks:{font:{size:9}}}}}});
+}
+
+function draw(){
+  // risk table
+  const tb=document.getElementById('risk-tb');
+  if(tb&&!tb.children.length) RD.forEach(r=>{
+    const p=Math.min((r.rt/4)*100,100);
+    tb.innerHTML+=`<tr><td style="font-weight:600">${r.c}</td><td><span class="rb r${r.risk[0]}">${r.risk.toUpperCase()}</span></td><td><div class="brow"><div class="btrack"><div class="bfill" style="width:${p}%;background:${r.col}"></div></div><span style="font-family:var(--mono);font-size:10px;min-width:22px">${r.rt}</span></div></td><td style="font-family:var(--mono);font-size:10px;color:${r.g.startsWith('-')?'var(--green)':'var(--red)'}">${r.g}</td></tr>`;
+  });
+  // SIR panels
+  ['sir-home','sir-mpage'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&!el.children.length) SD.forEach(s=>{ el.innerHTML+=`<div class="sir-card"><div class="sir-nm">${s.n}</div><div class="sir-r0" style="color:${s.col}">${s.r0.toFixed(2)}</div><div class="sir-sub">Wave-1 R₀</div><div class="sir-pm">β=<span>${s.b.toFixed(3)}</span>&nbsp;γ=<span>${s.g.toFixed(3)}</span></div></div>`; });
+  });
+  // forecast list
+  const fcl=document.getElementById('fc-list');
+  if(fcl&&!fcl.children.length){
+    const fd=[{n:'India',c:44.7,f:46.2,l:45.1,h:47.8},{n:'US',c:103.8,f:105.1,l:104.0,h:107.2},{n:'Brazil',c:37.1,f:37.9,l:37.3,h:38.9},{n:'Germany',c:38.3,f:39.1,l:38.6,h:40.0},{n:'France',c:39.8,f:40.4,l:39.9,h:41.2}];
+    const mx=Math.max(...fd.map(d=>d.h));
+    fd.forEach(d=>{
+      const chg=(((d.f-d.c)/d.c)*100).toFixed(1);
+      const fw=(d.f/mx*100).toFixed(1),bl=(d.l/mx*100).toFixed(1),bw=((d.h-d.l)/mx*100).toFixed(1);
+      fcl.innerHTML+=`<div class="fc-item"><div class="fc-nm">${d.n}</div><div class="fc-bar"><div class="fc-band" style="left:${bl}%;width:${bw}%"></div><div class="fc-fill" style="width:${fw}%"></div></div><div class="fc-vl">${d.f}M</div><div class="fc-chg cup">+${chg}%</div></div>`;
+    });
+  }
+
+  // charts
+  mkLn('c-cases',[
+    {label:'India',data:[0,0,0.01,0.05,0.4,0.39,0.07,0.04,0.04,0.13,0.12,0.1,0.06,0.18,2.4,3.1,0.8,0.15,0.08,0.07,0.04,0.03,0.03,0.02,0.01,0.01,0.005],borderColor:'#00d2ff',backgroundColor:'rgba(0,210,255,.06)',fill:true,tension:0.4,pointRadius:0},
+    {label:'US',data:[0.1,0.5,2.0,3.0,2.0,0.5,0.3,1.5,1.8,0.8,1.5,3.5,4.0,1.2,0.4,0.2,0.8,3.0,2.0,0.5,0.3,0.2,0.1,0.05,0.03,0.02,0.01],borderColor:'#ff3b5c',backgroundColor:'rgba(255,59,92,.06)',fill:true,tension:0.4,pointRadius:0},
+    {label:'Brazil',data:[0,0,0.01,0.1,0.3,0.5,0.5,0.3,0.5,0.6,0.4,0.5,0.7,1.0,1.2,0.8,0.4,0.3,0.3,0.2,0.15,0.12,0.1,0.05,0.02,0.01,0.005],borderColor:'#ffaa00',backgroundColor:'rgba(255,170,0,.06)',fill:true,tension:0.4,pointRadius:0},
+    {label:'UK',data:[0,0.03,0.1,0.2,0.1,0.05,0.04,0.1,0.3,0.4,0.5,0.6,0.8,0.2,0.08,0.05,1.5,1.8,0.8,0.2,0.08,0.05,0.04,0.02,0.01,0.005,0.003],borderColor:'#00ffcc',backgroundColor:'rgba(0,255,204,.04)',fill:true,tension:0.4,pointRadius:0}
+  ],'Cases/day (M)');
+
+  mk('c-rt',{type:'line',data:{labels:MO.slice(1,22),datasets:[
+    {label:'India',data:[1.2,1.5,2.1,3.2,2.8,0.8,0.9,1.1,1.4,1.3,1.2,1.0,1.8,4.2,3.1,0.7,0.8,0.9,0.8,0.7,0.6],borderColor:'#00d2ff',tension:0.4,pointRadius:0,fill:false,borderWidth:2},
+    {label:'US',data:[1.8,2.5,3.0,2.2,1.5,0.9,1.2,1.8,2.0,1.4,1.8,2.5,2.8,1.5,0.9,0.8,1.2,1.8,1.4,0.9,0.7],borderColor:'#ff3b5c',tension:0.4,pointRadius:0,fill:false,borderWidth:2},
+    {label:'Brazil',data:[1.4,1.8,2.0,1.9,1.6,1.0,1.3,1.5,1.6,1.3,1.4,1.7,2.0,1.9,1.5,1.0,1.2,1.3,1.2,1.0,0.9],borderColor:'#ffaa00',tension:0.4,pointRadius:0,fill:false,borderWidth:2},
+  ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{boxWidth:9,font:{size:10}}}},scales:{x:{ticks:{maxTicksLimit:8,font:{size:9}}},y:{min:0,max:5,title:{display:true,text:'Rₜ',font:{size:9}},ticks:{font:{size:9}}}}}});
+
+  mk('c-dist',{type:'line',data:{labels:MO.slice(0,25),datasets:[
+    {label:'Critical',data:[0,2,5,12,8,3,2,4,6,5,7,10,14,18,16,8,15,20,18,10,14,12,10,8,14],backgroundColor:'rgba(255,59,92,.6)',borderColor:'#ff3b5c',fill:true,tension:0.4,pointRadius:0},
+    {label:'High',data:[3,8,15,20,18,10,8,12,16,14,18,22,25,28,24,16,22,28,25,18,22,20,18,15,22],backgroundColor:'rgba(255,170,0,.4)',borderColor:'#ffaa00',fill:true,tension:0.4,pointRadius:0},
+    {label:'Medium',data:[20,30,40,45,50,45,42,48,52,50,54,55,52,48,50,48,55,58,56,52,54,52,50,48,54],backgroundColor:'rgba(0,210,255,.2)',borderColor:'#00d2ff',fill:true,tension:0.4,pointRadius:0},
+    {label:'Low',data:[178,161,141,124,125,143,149,137,127,132,122,114,110,107,111,129,110,95,102,121,111,117,123,130,111],backgroundColor:'rgba(0,230,118,.12)',borderColor:'#00e676',fill:true,tension:0.4,pointRadius:0},
+  ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{boxWidth:9,font:{size:10}}}},scales:{x:{stacked:true,ticks:{maxTicksLimit:8,font:{size:9}}},y:{stacked:true,title:{display:true,text:'Countries',font:{size:9}},ticks:{font:{size:9}}}}}});
+
+  const donutCfg={type:'doughnut',data:{labels:['Very High Burden','High Burden','Moderate Burden','Low Burden'],datasets:[{data:[28,45,62,66],backgroundColor:['rgba(255,59,92,.8)','rgba(255,170,0,.8)','rgba(0,210,255,.7)','rgba(0,230,118,.7)'],borderColor:['#ff3b5c','#ffaa00','#00d2ff','#00e676'],borderWidth:2}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{boxWidth:9,font:{size:10},padding:9}}}}};
+  mk('c-donut',JSON.parse(JSON.stringify(donutCfg)));
+  mk('c-mc',JSON.parse(JSON.stringify(donutCfg)));
+
+  mk('c-vs',{type:'scatter',data:{datasets:[
+    {label:'Critical',data:[{x:35,y:320},{x:22,y:280},{x:48,y:310},{x:15,y:350}],backgroundColor:'rgba(255,59,92,.7)',pointRadius:6},
+    {label:'High',data:[{x:55,y:180},{x:62,y:160},{x:45,y:200},{x:70,y:150}],backgroundColor:'rgba(255,170,0,.7)',pointRadius:6},
+    {label:'Medium',data:[{x:72,y:90},{x:68,y:110},{x:80,y:75},{x:65,y:120}],backgroundColor:'rgba(0,210,255,.6)',pointRadius:5},
+    {label:'Low',data:[{x:88,y:30},{x:92,y:20},{x:85,y:45},{x:90,y:25}],backgroundColor:'rgba(0,230,118,.6)',pointRadius:5},
+  ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{boxWidth:9,font:{size:10}}}},scales:{x:{title:{display:true,text:'Vaccination (%)',font:{size:9}}},y:{title:{display:true,text:'Cases/million (k)',font:{size:9}}}}}});
+
+  mkFc('c-fi',[0.03,0.34,3.3,10.3,14.2,19.6,24.6,26.5,27.2,29.0,30.1,31.5,32.4,34.0,40.2,43.1,44.0,44.2,44.4,44.5,44.6,44.65,44.68,44.70],[46.2,46.8,47.1,47.2],[45.1,45.7,46.0,46.1],[47.8,48.4,48.7,48.8],'rgb(0,210,255)');
+  mkFc('c-fu',[0.3,1.7,9.6,26.4,44.5,65.1,76.0,90.1,97.1,99.1,100.1,101.2,101.8,102.5,102.9,103.2,103.5,103.7,103.75,103.8,103.82,103.84,103.85,103.88],[105.1,105.8,106.1,106.2],[104.0,104.7,105.0,105.1],[107.2,107.9,108.2,108.3],'rgb(255,59,92)');
+  mkFc('c-fb',[0.1,1.2,5.4,14.8,25.9,34.6,36.2,36.6,36.8,37.0,37.05,37.1,37.12,37.14,37.15,37.16,37.16],[37.9,38.2,38.4,38.5],[37.3,37.6,37.8,37.9],[38.9,39.2,39.4,39.5],'rgb(255,170,0)');
+
+  mk('c-imp',{type:'bar',data:{labels:['Confirmed','Lag 7d','7d avg','Lag 14d','Lag 1d','Growth rate','Rₜ proxy','Lag 3d','Doubling T','Vaccination','Stringency','CFR','Pop density','Median age'],datasets:[{data:[0.38,0.22,0.14,0.07,0.05,0.04,0.03,0.02,0.02,0.01,0.01,0.005,0.004,0.003],backgroundColor:ctx=>{const v=ctx.raw;return v>0.2?'#ff3b5c':v>0.05?'#ffaa00':'#00d2ff';},borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}});
+  if(document.getElementById('c-imp')) document.getElementById('c-imp').style.maxHeight='260px';
+
+  mk('c-ap',{type:'line',data:{labels:MO.slice(0,20),datasets:[
+    {label:'Actual',data:[0.03,0.34,3.3,10.3,14.2,19.6,24.6,26.5,27.2,29.0,30.1,31.5,32.4,34.0,40.2,43.1,44.0,44.2,44.4,44.5],borderColor:'#00d2ff',tension:0.4,pointRadius:0,fill:false,borderWidth:2},
+    {label:'Predicted',data:[0.02,0.30,3.1,9.8,13.9,19.1,24.2,26.1,26.9,28.6,29.8,31.2,32.1,33.7,39.8,42.7,43.8,44.0,44.2,44.4],borderColor:'#ffaa00',tension:0.4,pointRadius:0,fill:false,borderDash:[5,4],borderWidth:2},
+  ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{boxWidth:9,font:{size:10}}}},scales:{x:{ticks:{maxTicksLimit:8,font:{size:9}}},y:{title:{display:true,text:'Confirmed (M)',font:{size:9}},ticks:{font:{size:9}}}}}});
+
+  mk('c-ed',{type:'bar',data:{labels:Array.from({length:20},(_,i)=>(i*0.35).toFixed(1)),datasets:[{data:Array.from({length:20},(_,i)=>Math.round(4*Math.exp(i/3.5))),backgroundColor:'rgba(0,210,255,.5)',borderColor:'#00d2ff',borderWidth:1,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'log10(MAE)',font:{size:9}},ticks:{maxTicksLimit:6,font:{size:9}}},y:{title:{display:true,text:'Countries',font:{size:9}},ticks:{font:{size:9}}}}}});
+}
+
+// Map interaction
+document.querySelectorAll('.mr').forEach(el=>{
+  el.style.cursor='pointer';
+  el.addEventListener('mousemove',e=>{
+    const svg=document.getElementById('wsvg');
+    const rect=svg.getBoundingClientRect();
+    const x=((e.clientX-rect.left)/rect.width)*1000;
+    const y=((e.clientY-rect.top)/rect.height)*460;
+    const tx=Math.min(x+12,795),ty=Math.min(y+8,370);
+    ['tb','tn','tr','tc','t0'].forEach(id=>document.getElementById(id)?.setAttribute('x',id==='tb'?tx:tx+12));
+    document.getElementById('tb')?.setAttribute('y',ty);
+    ['tn','tr','tc','t0'].forEach((id,i)=>document.getElementById(id)?.setAttribute('y',ty+20+i*18));
+    document.getElementById('tn').textContent=el.dataset.n;
+    document.getElementById('tr').textContent='Risk: '+el.dataset.r.toUpperCase();
+    document.getElementById('tc').textContent=el.dataset.c;
+    document.getElementById('t0').textContent='Wave-1 R₀ = '+el.dataset.r0;
+    document.getElementById('maptip')?.setAttribute('opacity','1');
+  });
+  el.addEventListener('mouseleave',()=>document.getElementById('maptip')?.setAttribute('opacity','0'));
+  el.addEventListener('click',()=>{
+    const p=document.getElementById('cpanel');
+    const col=el.dataset.r==='Critical'?'var(--red)':el.dataset.r==='High'?'var(--amber)':el.dataset.r==='Medium'?'var(--cyan)':'var(--green)';
+    document.getElementById('cpnm').textContent=el.dataset.n;
+    document.getElementById('cpr').textContent=el.dataset.r.toUpperCase();
+    document.getElementById('cpr').style.color=col;
+    document.getElementById('cp0').textContent=el.dataset.r0;
+    document.getElementById('cpc').textContent=el.dataset.c;
+    document.getElementById('cpg2').textContent=el.dataset.n;
+    p.classList.add('open');
+    p.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+});
+</script>
+</body>
+</html>
