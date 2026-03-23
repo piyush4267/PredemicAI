@@ -154,12 +154,31 @@ K-Means (k=4) on per-capita burden features — separates Very High / High / Mod
 
 ---
 
-## Team
-
-Hackathon submission — Epidemic Spread Prediction track
+## Meet the Team
 
 ---
 
-## License
+**Hackathon Submission** — *Codecure | SPIRIT '26 | IIT (BHU) Varanasi*
 
-MIT License
+---
+
+* **Piyush Anand**
+* **Anshpreet Singh**
+* **Gurkirat Singh**
+* **Pratyush Sehgal** 
+
+---
+
+## License & Acknowledgments
+* **License:** Distributed under the [MIT License](LICENSE) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+* **Data Sources:** [Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19), [Our World in Data](https://github.com/owid/covid-19-data).
+* **Special Thanks:** The **SPIRIT '26** Organizing Committee, **IIT (BHU)**, and the **Codecure** Mentors for fostering innovation in health-tech.
+
+---
+
+*Built with ❤️ for Codecure @ SPIRIT '26 | IIT (BHU) Varanasi.*
+
+---
+
+## Python
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
