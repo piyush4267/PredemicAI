@@ -1,4 +1,4 @@
-# Methodology — EpidemicAI
+# Methodology — PredemicAI
 
 ## Biological & Epidemiological Reasoning
 
