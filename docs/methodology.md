@@ -89,6 +89,14 @@ The four cluster features that drive differentiation:
 
 ---
 
+## Assumptions & Limitations
+While PredemicAI provides high-accuracy forecasting, the following limitations apply:
+* **Reporting Artifacts:** The model assumes consistent data reporting. "Weekend effects" (lower reporting on Sundays) are smoothed using 7-day rolling averages but may still introduce minor noise.
+* **Testing Saturation:** In regions where testing capacity is reached, "Confirmed Cases" acts as a floor rather than a ceiling. We use the **Stringency Index** and **CFR** to help adjust for these hidden surges.
+* **Homogeneous Mixing:** The SIR component assumes uniform contact across a country. Future work will incorporate sub-national (state-level) data to account for geographic variance.
+
+---
+
 ## References
 
 - Liu Y et al. (2020). The reproductive number of COVID-19 is higher compared to SARS coronavirus. *J Travel Med*.
